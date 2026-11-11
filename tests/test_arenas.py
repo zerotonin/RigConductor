@@ -43,9 +43,11 @@ def test_layout_roundtrip_renumbers_and_drops_offset(tmp_path):
                 "frame_width": 2600,
                 "frame_height": 2160,
                 "video_offset": [670, 296],
+                "video_crop": {"x": 670, "y": 296, "w": 944, "h": 976},
+                "clip_box": "x, y, w, h",
                 "padding": 0.1,
                 "arenas": [
-                    {"cx": 900, "cy": 900, "r": 100, "idx": 5},
+                    {"cx": 900, "cy": 900, "r": 100, "idx": 5, "clip": [790, 790, 220, 220]},
                     {"cx": 100, "cy": 900, "r": 100, "idx": 0},
                 ],
             }
@@ -61,6 +63,7 @@ def test_layout_roundtrip_renumbers_and_drops_offset(tmp_path):
         1,
     ]
     assert "video_offset" not in d and d["recording"] == "r" and d["padding"] == 0.1
+    assert "video_crop" not in d and all("clip" not in a for a in d["arenas"])  # re-cut writes them
     save_layout(tmp_path / "new" / "b.json", Layout([(1, 2, 3)], 10, 10))
     assert (tmp_path / "new" / "b.json").is_file()
 

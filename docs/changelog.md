@@ -2,6 +2,72 @@
 
 ## Unreleased
 
+- **Training-data wizard** (`rigconductor label`, "Training data…" button, desktop
+  icon *Rig Conductor — training data*): label sets with versions
+  (`~/data/sleap_labels/sets/<set>/`), frame choice from analysed recordings
+  (unsure / flies touching / spread, at least 2 s apart, never frames already
+  labelled), packages with the frames embedded and pre-filled by a model, to label
+  here or on another Linux PC from a USB stick (`label.sh` installs SLEAP),
+  checks on return (half-corrected frames, wrong fly count, missing thorax,
+  points off the image, duplicates; female head rule as a warning), merge into a
+  new version, training on Aoraki and the promotion rule. Frames are recognised by
+  a hash of their pixels.
+- Training-data wizard, first screen: **Continue labelling frames picked earlier**
+  lists the packages not brought back yet (on a stick or this PC) with how many
+  frames are labelled so far, and opens one in SLEAP.
+- **Training data** page before training: per recording of the chosen version an
+  example frame with the labels drawn on, frames, flies, flies per frame, image
+  size, arenas and labellers; each recording is set to Training, Validation or
+  Leave out. Left-out recordings are kept out of the split and named in the
+  registry entry; repeated runs on one day get unique names.
+- **Continue labelling** lists wizard packages *and* SLEAP projects labelled outside
+  the wizard (a set's seed project is added automatically; *Add a SLEAP project…*
+  for others), each with a bar: green labelled, yellow only predicted, red nothing
+  yet. *Bring labelled frames back* takes a project's frames labelled since the
+  last time (frames already in the set are skipped by pixel hash), checks them and
+  merges them as a new version.
+- Fix: merging appends the new frames with their own videos; SLEAP's merge matched
+  videos by source clip and mixed up frame numbers when new frames came from a
+  clip already in the set.
+- *Copy to USB…* on the Continue page: copies a package (with what is labelled so
+  far) to a plugged-in stick or a folder; an existing copy there is only replaced
+  after a warning that its labels would be lost. Copies are recorded so *Delete…*
+  finds them.
+- *Delete…* on the Continue page: deletes a package (this PC's copy and copies on
+  plugged-in sticks) after a warning that lists the folders and the labelled
+  frames that would be lost; with labelled frames the package name must be typed.
+  Merged packages cannot be deleted; deleted packages' frames can be picked again.
+  For a SLEAP project it only takes it off the list (the file stays).
+- Frame check: "same fly" now means every point of one fly lies on the other (a
+  fly labelled twice); flies overlapping in courtship or copulation pass.
+- Message boxes in all three windows (`gui/dialogs.py`) are as wide as their
+  longest line (up to 80 % of the screen), their text can be selected and copied,
+  and messages over 24 lines show the start with the rest under *Show Details*.
+  The same goes for the hand-built boxes (model vs camera), the text and choice
+  inputs (label set name, vial code, *Copy to USB* destination) and the Aoraki
+  arena log, which now opens in a log window sized to its lines; the example
+  frame is capped at the screen.
+- Training data page: a recording can be set to **All (split automatically)**.
+  `LABEL_TEST_SHARE` (20 %) of its frames, chosen by pixel hash so a frame stays
+  on its side in later versions, join the validation set of its scale; the rest
+  is trained on. Validation recordings are no longer required when a recording
+  is set to All; the registry entry names the recordings split by frame.
+- Re-saving an arena layout drops the clip boxes and video crop of the previous
+  cut (ThermoKourt writes them again on the next cut).
+- **Default label set** (`rigconductor label-default [NAME]`, *Make default* on the
+  first screen) and **`rigconductor label-sync`**: copies it to
+  `<project>/sleap_labels/sets/<name>/` on Aoraki (never deletes there; `train/`
+  left out). `label-sync --install-cron` adds a crontab line every
+  `LABEL_SYNC_HOURS` (2) hours, log in `~/.local/state/rigconductor/label-sync.log`;
+  under cron the ssh key comes from the desktop keyring, so the PC must stay
+  logged in.
+- **SLEAP 1.6 for labelling** (`sleapenv.py`, `rigconductor setup-sleap`): CPU
+  build installed per user with uv, no sudo; all SLEAP work runs in that env as a
+  child process.
+- Promoted models: registry entries with `default: true` are pre-selected for new
+  recordings (the last one per organism).
+- `rigconductor install-desktop` writes both desktop icons.
+
 - Standard camera settings set and read back before every recording
   (`CAMERA_SETTINGS`, rig.yaml `motif.camera`): exposure 8850 µs, gain 0 dB,
   69 fps, auto exposure/gain off; codec default `mq-fast`. A camera that does not

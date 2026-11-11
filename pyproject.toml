@@ -11,7 +11,7 @@ license = {text = "MIT"}
 requires-python = ">=3.10"
 authors = [{name = "Bart R.H. Geurten", email = "bart.geurten@otago.ac.nz"}]
 keywords = ["motif", "loopbio", "behaviour", "drosophila", "xenopus", "slurm"]
-dependencies = ["pyyaml>=6.0"]
+dependencies = ["pyyaml>=6.0", "numpy>=1.24"]
 
 [project.optional-dependencies]
 gui = ["PyQt6>=6.5"]
@@ -25,6 +25,9 @@ rigconductor = "rigconductor.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["rigconductor*"]
+
+[tool.setuptools.package-data]
+rigconductor = ["installer/*.sh", "installer/*.md"]
 
 [tool.ruff]
 line-length = 100

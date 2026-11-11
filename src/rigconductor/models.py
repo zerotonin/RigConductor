@@ -43,6 +43,7 @@ class Model:
     deprecated: bool = False
     expects: dict = field(default_factory=dict)  # training-data description, see compat.py
     grayscale_input: bool = False  # the model's config converts any input to gray
+    default: bool = False  # promoted: pre-selected for its organism (last one wins)
 
     @property
     def label(self) -> str:
@@ -110,3 +111,9 @@ def by_id(models: list[Model], model_id: str) -> Model:
         if m.id == model_id:
             return m
     raise ConductorError(f"model '{model_id}' is not in the registry; press 'Refresh models'")
+
+
+def default_for(models: list[Model], organism: str) -> str | None:
+    """Id of the promoted model for ``organism`` (the last one marked default)."""
+    marked = [m for m in models_for(models, organism) if m.default]
+    return marked[-1].id if marked else None

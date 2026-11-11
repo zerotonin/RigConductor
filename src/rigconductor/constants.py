@@ -115,3 +115,36 @@ CLIP_MODES = {
 }
 DEFAULT_CLIP_MODE = "plain"
 RENDER_JOBS = 4  # annotated clips drawn in parallel
+
+# ┌────────────────────────────────────────────────────────────┐
+# │ Message boxes  « sized to their text »                     │
+# └────────────────────────────────────────────────────────────┘
+DIALOG_MIN_WIDTH = 420  # px
+DIALOG_SCREEN_SHARE = 0.8  # never wider than this share of the screen
+DIALOG_MAX_LINES = 24  # longer plain messages go under Show Details
+
+# ┌────────────────────────────────────────────────────────────┐
+# │ Training data  « labelling wizard and SLEAP 1.6 »          │
+# └────────────────────────────────────────────────────────────┘
+LABEL_SETS_DIR = "~/data/sleap_labels/sets"  # one folder per label set
+LOCAL_MODELS_DIR = "~/data/sleap_labels/models"  # <run>.centroid / <run>.centered_instance
+LABEL_PROFILE = "drosophila_triad"  # profile whose recordings and registry the wizard uses
+LABEL_FRAMES_PER_ARENA = 10  # frames picked per arena and round
+LABEL_MIX = {"unsure": 0.4, "contact": 0.4, "uniform": 0.2}  # how they are picked
+LABEL_MIN_GAP_S = 2.0  # picked frames of one arena are at least this far apart
+LABEL_CONTACT_BL = 1.5  # thoraxes closer than this many body lengths = flies touch
+LABEL_REVIEW_FRAC = 0.1  # share of a package that is the overlap set (labelled by everyone)
+LABEL_POLARITY = "inverted"  # frames stored as bright flies on dark (flies13 convention)
+LABEL_FEMALE_HIDDEN = ("head", "eyeL", "eyeR")  # placed but marked invisible on the female
+LABEL_ANCHOR = "thorax"
+LABEL_THUMB_PX = 150  # example frames on the training-data page
+LABEL_TEST_SHARE = 0.2  # frames of "All" recordings held out to score the model (by pixel hash)
+SLEAP_VERSION = "1.6.6"  # pinned for labelling PCs and Aoraki
+SLEAP_PYTHON = "3.13"
+SLEAP_CPU_INDEX = "https://download.pytorch.org/whl/cpu"
+SLEAP_TOOL = "sleap"  # uv tool name; its python runs every SLEAP step
+NN_ENV_REMOTE = "envs/uv-tools/sleap"  # sleap-nn env on Aoraki, relative to the project
+TRAIN_EPOCHS = 200
+TRAIN_POLL_S = 120
+LABEL_SYNC_HOURS = 2  # cron copies the default label set to Aoraki this often
+SLEAP_TASK_TIMEOUT_S = 3600

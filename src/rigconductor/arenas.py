@@ -92,7 +92,8 @@ def save_layout(path: Path, layout: Layout) -> Path:
     """Write ``layout`` as a ThermoKourt arenas JSON (circles renumbered row-major)."""
     circles = sort_row_major(layout.circles)
     meta = {"padding": TK_CROP_PADDING, **layout.meta}
-    meta.pop("video_offset", None)  # full-frame coordinates: no offset
+    for stale in ("video_offset", "video_crop", "clip_box"):  # full-frame coordinates;
+        meta.pop(stale, None)  # the next cut writes the clip boxes again
     d = {
         **meta,
         "frame_width": layout.frame_width,

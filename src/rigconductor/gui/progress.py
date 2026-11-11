@@ -22,6 +22,7 @@ STAGE_TEXT = {
     "cut": "Cutting into arenas",
     "reduce": "Cropping the recording",
     "render": "Drawing the clips",
+    "label": "Training data",
 }
 BAR_STEPS = 1000
 

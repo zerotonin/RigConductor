@@ -40,6 +40,7 @@ from PyQt6.QtWidgets import (
 )
 
 from rigconductor.constants import N_ARENAS, N_FLY_ROLES
+from rigconductor.gui import dialogs
 
 MIME = "application/x-rigconductor-vials"
 ROLE_LABELS = {"male_1": "♂ 1", "male_2": "♂ 2", "female_decap": "♀ decap."}
@@ -247,9 +248,7 @@ class VialSlot(QFrame):
             e.acceptProposedAction()
 
     def mouseDoubleClickEvent(self, e):  # noqa: N802 - type a code by hand
-        from PyQt6.QtWidgets import QInputDialog
-
-        code, ok = QInputDialog.getText(self, "Vial", "Print code:", text=self.code)
+        code, ok = dialogs.get_text(self, "Vial", "Print code:", self.code)
         if ok:
             self.set_code(code.strip())
 

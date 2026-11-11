@@ -23,7 +23,6 @@ from PyQt6.QtWidgets import (
     QLabel,
     QListWidget,
     QMainWindow,
-    QMessageBox,
     QPlainTextEdit,
     QPushButton,
     QVBoxLayout,
@@ -33,6 +32,7 @@ from PyQt6.QtWidgets import (
 from rigconductor import ConductorError
 from rigconductor import relay as relay_mod
 from rigconductor.config import ConductorConfig
+from rigconductor.gui import dialogs
 from rigconductor.gui.wizard import Worker
 from rigconductor.session import ConductorSession, ConductorSpec
 
@@ -92,7 +92,7 @@ class RelayWindow(QMainWindow):
         i = self.list.currentRow()
         ss = self._sessions()
         if i < 0 or i >= len(ss):
-            QMessageBox.information(self, "Rig Relay", "Select a session in the list first")
+            dialogs.information(self, "Rig Relay", "Select a session in the list first")
             return None
         return ss[i]
 
@@ -105,7 +105,7 @@ class RelayWindow(QMainWindow):
         try:
             relay_mod.import_job(self.cfg, Path(p), log=self.log.appendPlainText)
         except ConductorError as e:
-            QMessageBox.warning(self, "Rig Relay", str(e))
+            dialogs.warning(self, "Rig Relay", str(e))
         self.refresh()
 
     def send(self):
@@ -113,7 +113,7 @@ class RelayWindow(QMainWindow):
         if s is None:
             return
         if self.worker and self.worker.isRunning():
-            QMessageBox.information(self, "Rig Relay", "A session is already running")
+            dialogs.information(self, "Rig Relay", "A session is already running")
             return
 
         def job(log):
@@ -128,9 +128,9 @@ class RelayWindow(QMainWindow):
     def _done(self, ok: bool, msg: str):
         self.refresh()
         if ok:
-            QMessageBox.information(self, "Rig Relay", "Cluster part finished. Write the results.")
+            dialogs.information(self, "Rig Relay", "Cluster part finished. Write the results.")
         else:
-            QMessageBox.critical(self, "Rig Relay", msg)
+            dialogs.critical(self, "Rig Relay", msg)
 
     def write_results(self):
         s = self._selected()
@@ -142,9 +142,9 @@ class RelayWindow(QMainWindow):
         try:
             out = relay_mod.pack_results(s, Path(d), log=self.log.appendPlainText)
         except ConductorError as e:
-            QMessageBox.warning(self, "Rig Relay", str(e))
+            dialogs.warning(self, "Rig Relay", str(e))
             return
-        QMessageBox.information(self, "Rig Relay", f"Wrote {out.name}. Eject the stick.")
+        dialogs.information(self, "Rig Relay", f"Wrote {out.name}. Eject the stick.")
 
 
 def main(config_path: str | None = None):
@@ -152,7 +152,7 @@ def main(config_path: str | None = None):
     try:
         cfg = ConductorConfig.load(config_path)
     except FileNotFoundError as e:
-        QMessageBox.critical(None, "Rig Relay", str(e))
+        dialogs.critical(None, "Rig Relay", str(e))
         return 1
     w = RelayWindow(cfg)
     w.show()

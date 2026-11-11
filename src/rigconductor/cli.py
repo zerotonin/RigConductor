@@ -14,6 +14,7 @@ rigconductor disks
 rigconductor run SESSION.json [--from STAGE] [--to STAGE] [--disk /dev/sdX1]
 rigconductor status SESSION_ID
 rigconductor gui
+rigconductor label-default [NAME] | label-sync [--set S] [--install-cron | --remove-cron]
 """
 
 from __future__ import annotations
@@ -264,11 +265,73 @@ def cmd_gui(a):
     gui_main(a.config)
 
 
+def cmd_label(a):
+    from rigconductor.gui.labelling_wizard import main as label_main
+
+    label_main(a.config)
+
+
+def cmd_setup_sleap(a):
+    from rigconductor import sleapenv
+
+    env = sleapenv.find()
+    if env and not a.reinstall:
+        print(f"SLEAP {env.version} already installed: {env.python}")
+        return
+    env = sleapenv.install(log=print, reinstall=a.reinstall)
+    print(f"SLEAP {env.version} ready: {env.python}")
+
+
+def cmd_install_desktop(a):
+    from rigconductor import desktop
+
+    for p in desktop.install():
+        print(f"launcher: {p}")
+
+
+def cmd_label_default(a):
+    from rigconductor.labels import store
+
+    if a.name:
+        store.set_default(a.name)
+    print(store.default_set() or "no default label set")
+
+
+def cmd_label_sync(a):
+    from rigconductor.labels import sync
+
+    if a.install_cron or a.remove_cron:
+        from rigconductor.desktop import conductor_exe
+
+        line = sync.install_cron(str(conductor_exe()), config=a.config, remove=a.remove_cron)
+        print(f"crontab: {line}" if line else "crontab: label-sync removed")
+        return
+    print(sync.sync_locked(_cfg(a), a.set), flush=True)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="rigconductor", description=__doc__.split("\n\n")[0])
     ap.add_argument("--config", default=None, help="rig.yaml (default ~/.config/rigconductor)")
     ap.add_argument("--version", action="version", version=__version__)
     sub = ap.add_subparsers(dest="cmd", required=True)
+
+    sub.add_parser("label", help="training-data wizard (SLEAP labels, training)").set_defaults(
+        fn=cmd_label
+    )
+    p = sub.add_parser("setup-sleap", help="install SLEAP (CPU) for labelling")
+    p.add_argument("--reinstall", action="store_true")
+    p.set_defaults(fn=cmd_setup_sleap)
+    sub.add_parser("install-desktop", help="desktop icons for both wizards").set_defaults(
+        fn=cmd_install_desktop
+    )
+    p = sub.add_parser("label-default", help="show or set the default label set")
+    p.add_argument("name", nargs="?")
+    p.set_defaults(fn=cmd_label_default)
+    p = sub.add_parser("label-sync", help="copy the default label set to Aoraki")
+    p.add_argument("--set", default=None, help="another label set than the default")
+    p.add_argument("--install-cron", action="store_true", help="every LABEL_SYNC_HOURS h")
+    p.add_argument("--remove-cron", action="store_true")
+    p.set_defaults(fn=cmd_label_sync)
 
     p = sub.add_parser("init-config")
     p.add_argument("path", nargs="?")

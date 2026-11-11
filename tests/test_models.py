@@ -53,3 +53,15 @@ def test_dict_form_and_empty():
     assert parse_registry("") == []
     ms = parse_registry("models:\n- id: a\n  organism: o\n  kind: k\n")
     assert isinstance(ms[0], Model)
+
+
+def test_promoted_model_is_the_default():
+    from rigconductor.models import default_for, parse_registry
+
+    ms = parse_registry(
+        "- {id: a, organism: drosophila, kind: sleap-topdown}\n"
+        "- {id: b, organism: drosophila, kind: sleap-topdown, default: true}\n"
+        "- {id: c, organism: drosophila, kind: sleap-topdown, default: true}\n"
+        "- {id: t, organism: xenopus, kind: dlc}\n"
+    )
+    assert default_for(ms, "drosophila") == "c" and default_for(ms, "xenopus") is None

@@ -44,6 +44,7 @@ from rigconductor import models as models_mod
 from rigconductor.config import ConductorConfig
 from rigconductor.constants import CLIP_MODES, DEFAULT_CLIP_MODE, REDUCE_PADDING_MAX_PX
 from rigconductor.export import Disk, removable_disks
+from rigconductor.gui import dialogs
 from rigconductor.gui.duration import DurationEdit, format_duration
 from rigconductor.gui.forms import make_form
 from rigconductor.gui.preview import PreviewPanel
@@ -99,16 +100,25 @@ class Wizard(QWizard):
             self.addPage(self.pages[key])
         self._add_update_buttons()
 
+    def open_training_wizard(self):
+        from rigconductor.gui.labelling_wizard import LabellingWizard
+
+        self.training = LabellingWizard(self.cfg)
+        self.training.show()
+
     # ── updates (bottom left of every page) ─────────────────────────────
     def _add_update_buttons(self):
         self.setButtonText(QWizard.WizardButton.CustomButton1, "Check for updates")
         self.setButtonText(QWizard.WizardButton.CustomButton2, "Update")
         self.setOption(QWizard.WizardOption.HaveCustomButton1, True)
         self.setOption(QWizard.WizardOption.HaveCustomButton2, True)
+        self.setButtonText(QWizard.WizardButton.CustomButton3, "Training data…")
+        self.setOption(QWizard.WizardOption.HaveCustomButton3, True)
         self.setButtonLayout(
             [
                 QWizard.WizardButton.CustomButton1,
                 QWizard.WizardButton.CustomButton2,
+                QWizard.WizardButton.CustomButton3,
                 QWizard.WizardButton.Stretch,
                 QWizard.WizardButton.BackButton,
                 QWizard.WizardButton.NextButton,
@@ -125,6 +135,10 @@ class Wizard(QWizard):
     def _update_button(self, which: int):
         from rigconductor import updates
 
+        if which == QWizard.WizardButton.CustomButton3.value:
+            self.open_training_wizard()
+            return
+
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         try:
             states = updates.check_all()
@@ -134,18 +148,18 @@ class Wizard(QWizard):
         for s in states:
             lines += [f"    {c}" for c in s.new_commits[:8]]
         if which == QWizard.WizardButton.CustomButton1.value:
-            QMessageBox.information(self, "Check for updates", "\n".join(lines))
+            dialogs.information(self, "Check for updates", "\n".join(lines))
             return
         ready = [s for s in states if s.can_update]
         if not ready:
-            QMessageBox.information(self, "Update", "Nothing to update.\n\n" + "\n".join(lines))
+            dialogs.information(self, "Update", "Nothing to update.\n\n" + "\n".join(lines))
             return
         if self.worker and self.worker.isRunning():
-            QMessageBox.information(self, "Update", "Wait until the running step has finished.")
+            dialogs.information(self, "Update", "Wait until the running step has finished.")
             return
         names = ", ".join(s.name for s in ready)
         if (
-            QMessageBox.question(self, "Update", f"Update {names}?\n\n" + "\n".join(lines))
+            dialogs.question(self, "Update", f"Update {names}?\n\n" + "\n".join(lines))
             != QMessageBox.StandardButton.Yes
         ):
             return
@@ -155,7 +169,7 @@ class Wizard(QWizard):
                 done.append(updates.update_repo(s))
             except RuntimeError as e:
                 done.append(f"{s.name}: update failed: {e}")
-        QMessageBox.information(
+        dialogs.information(
             self, "Update", "\n".join(done) + "\n\nClose and start the Conductor again to use it."
         )
 
@@ -216,7 +230,7 @@ class Wizard(QWizard):
 
     def run_in_worker(self, fn, on_done, log_widget):
         if self.worker and self.worker.isRunning():
-            QMessageBox.information(self, "Busy", "Something is still running")
+            dialogs.information(self, "Busy", "Something is still running")
             return
         self.worker = Worker(fn)
         sink = log_widget if callable(log_widget) else log_widget.appendPlainText
@@ -390,11 +404,16 @@ class SetupPage(QWizardPage):
             self.model.addItem(m.label, m.id)
         if not self.models:
             self.model.addItem("(no models: press Refresh)", None)
-        want = self.current_preset().model
+        want = self.preferred_model()
         i = self.model.findData(want) if want else -1
         if i >= 0:
             self.model.setCurrentIndex(i)
         self.model.blockSignals(False)
+
+    def preferred_model(self) -> str | None:
+        """A model promoted in the registry beats the preset's built-in choice."""
+        organism = make_profile(self.profile.currentText()).organism
+        return models_mod.default_for(self.models, organism) or self.current_preset().model
 
     def _refresh_models(self):
         cfg = self.wiz.cfg
@@ -404,7 +423,7 @@ class SetupPage(QWizardPage):
                 cfg.cluster.ssh_host, cfg.registry_remote(name), cfg.registry_cache(name)
             )
         except ConductorError as e:
-            QMessageBox.warning(self, "Registry", str(e))
+            dialogs.warning(self, "Registry", str(e))
             return
         self._fill_models(ms)
 
@@ -415,8 +434,9 @@ class SetupPage(QWizardPage):
         cut = self.wiz.pages.get("cut")
         if cut is not None:
             cut.crop.setChecked(p.reduce)
-        if p.model and self.models:
-            i = self.model.findData(p.model)
+        want = self.preferred_model()
+        if want and self.models:
+            i = self.model.findData(want)
             if i >= 0:
                 self.model.setCurrentIndex(i)
 
@@ -443,7 +463,7 @@ class SetupPage(QWizardPage):
             a = box.addButton("Use anyway", QMessageBox.ButtonRole.DestructiveRole)
             b = box.addButton("Pick another model", QMessageBox.ButtonRole.RejectRole)
             actions = {a: "keep", b: "model"}
-        box.exec()
+        dialogs.fit(box, self).exec()
         return actions.get(box.clickedButton(), "cancel")
 
     def check_camera(self, interactive: bool = True) -> bool:
@@ -496,7 +516,7 @@ class SetupPage(QWizardPage):
                     now = client.read("AcquisitionFrameRate")
                     self.report.appendPlainText(f"→ camera set to {now} fps")
                 except Exception as e:  # noqa: BLE001
-                    QMessageBox.warning(self, "Camera", f"could not set the frame rate: {e}")
+                    dialogs.warning(self, "Camera", f"could not set the frame rate: {e}")
                     return False
             elif act == "keep":
                 self.report.appendPlainText(f"→ kept despite: {c.detail}")
@@ -580,10 +600,10 @@ class SetupPage(QWizardPage):
                     if info:
                         found.append(info)
         except ConductorError as e:
-            QMessageBox.warning(self, "DrosoDB", str(e))
+            dialogs.warning(self, "DrosoDB", str(e))
             return
         if not found or not target:
-            QMessageBox.information(
+            dialogs.information(
                 self,
                 "DrosoDB",
                 "No DrosoDB snapshot on any USB stick.\n"
@@ -594,9 +614,9 @@ class SetupPage(QWizardPage):
         try:
             n = ddbsync.import_snapshot(info, Path(target), log=self.report.appendPlainText)
         except ConductorError as e:
-            QMessageBox.warning(self, "DrosoDB", str(e))
+            dialogs.warning(self, "DrosoDB", str(e))
             return
-        QMessageBox.information(self, "DrosoDB", f"Imported {n} active vials ({info.created}).")
+        dialogs.information(self, "DrosoDB", f"Imported {n} active vials ({info.created}).")
         if "animals" in self.wiz.pages:
             self.wiz.pages["animals"].rebuild(self.profile.currentText())
 
@@ -636,7 +656,7 @@ class AnimalsPage(QWizardPage):
         prof = make_profile(self.wiz.profile_name())
         errs = prof.validate_metadata(self.form.values(), self.wiz.cfg)
         if errs:
-            QMessageBox.warning(self, "Incomplete", "\n".join(errs))
+            dialogs.warning(self, "Incomplete", "\n".join(errs))
             return False
         self.wiz.ensure_session()
         return True
@@ -708,7 +728,7 @@ class StagePage(QWizardPage):
         self.done_ok = ok
         self.status.setText("done" if ok else "failed — fix and press again")
         if not ok:
-            QMessageBox.critical(self, "Failed", msg)
+            dialogs.critical(self, "Failed", msg)
         self.completeChanged.emit()
 
     def isComplete(self) -> bool:  # noqa: N802
@@ -836,12 +856,12 @@ class CutPage(StagePage):
 
         s = self.wiz.ensure_session()
         if not s.spec.recording_dir:
-            QMessageBox.information(self, "Fix arenas", "Record (or choose a recording) first.")
+            dialogs.information(self, "Fix arenas", "Record (or choose a recording) first.")
             return
         ctx = s._ctx()
         path = s.profile.arena_layout_path(ctx)
         if path is None:
-            QMessageBox.information(self, "Fix arenas", "Press 'Cut' once first, then fix.")
+            dialogs.information(self, "Fix arenas", "Press 'Cut' once first, then fix.")
             return
         layout = load_layout(path)
         offset = video_offset(ctx.recording_dir)
@@ -849,7 +869,7 @@ class CutPage(StagePage):
             try:
                 img = QImage(str(grab_frame(ctx.recording_dir, Path(td) / "frame.png")))
             except ConductorError as e:
-                QMessageBox.warning(self, "Fix arenas", str(e))
+                dialogs.warning(self, "Fix arenas", str(e))
                 return
 
         def detect():
@@ -863,7 +883,7 @@ class CutPage(StagePage):
         saved = s.profile.save_arena_layout(ctx, layout)
         self.log.appendPlainText("arenas saved → " + ", ".join(str(p) for p in saved))
         if (
-            QMessageBox.question(self, "Fix arenas", "Cut the recording again with these arenas?")
+            dialogs.question(self, "Fix arenas", "Cut the recording again with these arenas?")
             == QMessageBox.StandardButton.Yes
         ):
             s.log = self.log.appendPlainText
@@ -879,7 +899,7 @@ class CutPage(StagePage):
             self.start()
             return
         if (
-            QMessageBox.question(self, "Cut again", "Cut this recording again?")
+            dialogs.question(self, "Cut again", "Cut this recording again?")
             != QMessageBox.StandardButton.Yes
         ):
             return
@@ -982,15 +1002,15 @@ class AnalysePage(StagePage):
         s = self.wiz.ensure_session()
         new = self.model.currentData()
         if not new:
-            QMessageBox.information(self, "Rerun", "Choose a model first.")
+            dialogs.information(self, "Rerun", "Choose a model first.")
             return
         if self.wiz.worker and self.wiz.worker.isRunning():
-            QMessageBox.information(self, "Rerun", "A run is still active: press Stop first.")
+            dialogs.information(self, "Rerun", "A run is still active: press Stop first.")
             return
         old = s.spec.model_id or "-"
         same = " (the same model again)" if new == old else ""
         if (
-            QMessageBox.question(
+            dialogs.question(
                 self,
                 "Rerun with another model",
                 f"Analyse this recording again with {new}{same}?\n\nNow: {old}. The earlier "
@@ -1003,7 +1023,7 @@ class AnalysePage(StagePage):
         try:
             s.rerun_with_model(new)
         except Exception as e:  # noqa: BLE001 - shown to the operator
-            QMessageBox.warning(self, "Rerun", f"Could not archive the earlier run: {e}")
+            dialogs.warning(self, "Rerun", f"Could not archive the earlier run: {e}")
             return
         self.monitor.stop()
         self.done_ok = False
@@ -1015,10 +1035,10 @@ class AnalysePage(StagePage):
 
         job = self._job_id()
         if not job:
-            QMessageBox.information(self, "Stop", "Nothing has been sent to Aoraki yet.")
+            dialogs.information(self, "Stop", "Nothing has been sent to Aoraki yet.")
             return
         if (
-            QMessageBox.question(
+            dialogs.question(
                 self, "Stop", "Cancel every GPU worker of this run? Finished arenas are kept."
             )
             != QMessageBox.StandardButton.Yes
@@ -1028,7 +1048,7 @@ class AnalysePage(StagePage):
         try:
             left = stop_run(self.wiz.cfg.cluster.ssh_host, job, q[0] if q else None)
         except RuntimeError as e:
-            QMessageBox.warning(self, "Stop", f"Could not reach Aoraki: {e}")
+            dialogs.warning(self, "Stop", f"Could not reach Aoraki: {e}")
             return
         self.add_line(
             "stopped: workers cancelled"
@@ -1041,17 +1061,18 @@ class AnalysePage(StagePage):
 
         q = self._queue()
         if not q:
-            QMessageBox.information(self, "Log", "Logs per arena exist for runs sent with workers.")
+            dialogs.information(self, "Log", "Logs per arena exist for runs sent with workers.")
             return
         try:
             text = arena_log(self.wiz.cfg.cluster.ssh_host, q[0], index)
         except RuntimeError as e:
             text = f"could not read the log: {e}"
-        box = QMessageBox(self)
-        box.setWindowTitle(f"Arena {index:02d}: log on Aoraki")
-        box.setText(f"Last lines of {q[0]}/_queue/arena_{index:02d}.log")
-        box.setDetailedText(text)
-        box.exec()
+        dialogs.show_text(
+            self,
+            f"Arena {index:02d}: log on Aoraki",
+            f"Last lines of {q[0]}/_queue/arena_{index:02d}.log",
+            text,
+        )
 
     def _send_again(self):
         s = self.wiz.ensure_session()
@@ -1096,7 +1117,7 @@ class AnalysePage(StagePage):
                 cfg.cluster.ssh_host, cfg.registry_remote(name), cfg.registry_cache(name)
             )
         except ConductorError as e:
-            QMessageBox.warning(self, "Registry", str(e))
+            dialogs.warning(self, "Registry", str(e))
             return
         self._fill(ms)
 
@@ -1104,15 +1125,15 @@ class AnalysePage(StagePage):
         s = self.wiz.ensure_session()
         mid = self.model.currentData()
         if not mid:
-            QMessageBox.information(self, "Model", "Choose a model first")
+            dialogs.information(self, "Model", "Choose a model first")
             return
         s.spec.model_id = mid
         s.log = self.log.appendPlainText
         try:
             checks = s.check_model()
-            QMessageBox.information(self, "Model check", "\n".join(c.line for c in checks))
+            dialogs.information(self, "Model check", "\n".join(c.line for c in checks))
         except ConductorError as e:
-            QMessageBox.warning(self, "Model check", str(e))
+            dialogs.warning(self, "Model check", str(e))
 
     def _pick_dest(self) -> Path | None:
         from rigconductor.export import mount
@@ -1131,7 +1152,7 @@ class AnalysePage(StagePage):
         s = self.wiz.ensure_session()
         mid = self.model.currentData()
         if not mid:
-            QMessageBox.information(self, "Relay", "Choose the model first")
+            dialogs.information(self, "Relay", "Choose the model first")
             return
         s.spec.model_id = mid
         s.spec.force_model = self.force.isChecked()
@@ -1141,9 +1162,9 @@ class AnalysePage(StagePage):
                 return
             out = pack_job(s, dest, log=self.log.appendPlainText)
         except ConductorError as e:
-            QMessageBox.warning(self, "Relay", str(e))
+            dialogs.warning(self, "Relay", str(e))
             return
-        QMessageBox.information(
+        dialogs.information(
             self,
             "Relay",
             f"Wrote {out.name}.\nTake the stick to a Rig Relay with network, then bring "
@@ -1161,9 +1182,9 @@ class AnalysePage(StagePage):
         try:
             import_results(self.wiz.ensure_session(), Path(p), log=self.log.appendPlainText)
         except ConductorError as e:
-            QMessageBox.warning(self, "Relay", str(e))
+            dialogs.warning(self, "Relay", str(e))
             return
-        QMessageBox.information(
+        dialogs.information(
             self, "Relay", "Results imported. Press 'Send to Aoraki and wait' to score them."
         )
 
@@ -1259,7 +1280,7 @@ def main(config_path: str | None = None):
     try:
         cfg = ConductorConfig.load(config_path)
     except FileNotFoundError as e:
-        QMessageBox.critical(None, "Rig Conductor", str(e))
+        dialogs.critical(None, "Rig Conductor", str(e))
         return 1
     w = Wizard(cfg)
     w.show()
