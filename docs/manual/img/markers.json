@@ -1,0 +1,161 @@
+{
+ "main_1_setup": [
+  "Profile",
+  "Preset",
+  "Pose model",
+  "Refresh (model list)",
+  "Recording title",
+  "Duration",
+  "Operator",
+  "Existing recording / Choose\u2026",
+  "Check rig readiness",
+  "Import DrosoDB from USB stick",
+  "Start preview",
+  "Find arenas in this image",
+  "Reduce view + padding",
+  "Overlays",
+  "Check for updates / Update",
+  "Training data\u2026",
+  "Next"
+ ],
+ "main_2_animals": [
+  "Experiment",
+  "Group code",
+  "Test temperature",
+  "Vial shelf search",
+  "Vial shelf",
+  "Arena card (tick = in use)",
+  "Copy A00 to all",
+  "Fill from selection",
+  "Clear all"
+ ],
+ "main_3_record": [
+  "Record for",
+  "Start recording",
+  "Abort",
+  "Live preview",
+  "Show technical details"
+ ],
+ "main_4_cut": [
+  "Cut into arenas / wells",
+  "Then crop the full recording",
+  "padding",
+  "Fix arenas\u2026",
+  "Cut again",
+  "Arena overlay"
+ ],
+ "main_5_analyse": [
+  "Model",
+  "Refresh models",
+  "Check model vs videos",
+  "use anyway",
+  "Rerun with this model",
+  "Rerun unfinished arenas",
+  "Stop",
+  "Send to Aoraki and wait",
+  "Pack for Rig Relay\u2026",
+  "Import relay results\u2026",
+  "Arena tile (click for its log)",
+  "GPU workers"
+ ],
+ "main_6_deliver": [
+  "Disk",
+  "Rescan",
+  "blind export",
+  "Clips",
+  "unmount the disk when done",
+  "Export"
+ ],
+ "arena_editor": [
+  "Same size for all",
+  "All bigger / All smaller",
+  "Undo / Reset",
+  "Find arenas again",
+  "Arena circles (drag, wheel, right-click)",
+  "Save"
+ ],
+ "arena_log": [],
+ "relay": [
+  "Load job package\u2026",
+  "Send to Aoraki and wait",
+  "Write results to stick\u2026",
+  "Refresh",
+  "Sessions"
+ ],
+ "train_1_start": [
+  "Label set",
+  "New set from a SLEAP project\u2026",
+  "Make default",
+  "Pick new frames to label",
+  "Continue labelling",
+  "Bring labelled frames back",
+  "Choose training data and train",
+  "Set up SLEAP",
+  "Next"
+ ],
+ "train_2_recordings": [
+  "Filters",
+  "Use",
+  "Validation only"
+ ],
+ "train_3_frames": [
+  "Frames per arena",
+  "Mix",
+  "Pre-fill with model",
+  "Choose frames"
+ ],
+ "train_4_package": [
+  "Where to label",
+  "Make the package"
+ ],
+ "train_5_continue": [
+  "Package / project list",
+  "Progress bar",
+  "Open in SLEAP",
+  "Add a SLEAP project\u2026",
+  "Look on a folder\u2026",
+  "Copy to USB\u2026",
+  "Delete\u2026"
+ ],
+ "train_6_back": [
+  "Package or project",
+  "Look on a folder\u2026",
+  "Labeller",
+  "Check frames",
+  "Also merge frames with warnings",
+  "Merge accepted frames"
+ ],
+ "train_7_data": [
+  "Label set version",
+  "Example (double-click)",
+  "Use as",
+  "Totals"
+ ],
+ "train_8_train": [
+  "Start from model",
+  "Compare with",
+  "Epochs (at most)",
+  "Start training",
+  "Make it the default model",
+  "Register without making it the default"
+ ],
+ "sleap_1_window": [
+  "Go menu: next and previous suggestion",
+  "Labels menu: add and delete flies",
+  "a fly guessed by the model",
+  "seek bar: suggested frames are marked",
+  "Labeling Suggestions tab: frames to label",
+  "Previous / Next suggestion and progress",
+  "status bar: frame and instance counts"
+ ],
+ "sleap_2_male": [
+  "thorax",
+  "head",
+  "wingL",
+  "forelegL4"
+ ],
+ "sleap_3_female": [
+  "head, eyeL, eyeR: placed and not visible",
+  "thorax"
+ ]
+}
