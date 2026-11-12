@@ -22,6 +22,10 @@ pictures.
 You can also open the training-data wizard from the main wizard with the
 **Training data…** button at the bottom.
 
+**Help** (bottom left on every page, or **F1**) opens this manual in its own
+window, at the section about the page you are on. It has a contents list and a
+search box (**Ctrl+F**); you can keep it open beside the wizard.
+
 A recording day goes through six pages: **Setup → Animals → Record → Cut &
 check → Analyse → Deliver**. Press **Next** to go on. Every step is saved, so
 you can close the program and pick up the same recording later (Setup page,
@@ -81,6 +85,7 @@ you can close the program and pick up the same recording later (Setup page,
 4. **Search**: type a vial code, genotype or owner to find a vial.
 5. **Vial shelf**: all active vials from DrosoDB, grouped by genotype. Drag a
    vial onto an arena slot. Ctrl-click or Shift-click to drag several at once.
+   **show Sickbay** also lists the vials in the Sickbay (hidden otherwise).
 6. **Arena card**: one card per arena. The tick says the arena is used. Drop a
    vial on a male slot; one vial fills both male slots. **✕** empties a slot,
    a double-click lets you type a code by hand, **age** is the age in days.
@@ -101,7 +106,7 @@ to go on while something required is missing and says what it is.
    counts the time.
 3. **Abort**: stops the recording early.
 4. **Live preview**: starts by itself, with the arenas and genotypes drawn on.
-5. **Show technical details**: also shows the commands sent to Motif and
+5. **Show technical details (commands sent to the cluster)**: also shows the commands sent to Motif and
    Aoraki in the log (for troubleshooting).
 
 **Next** becomes available when the recording has finished.
@@ -112,7 +117,7 @@ to go on while something required is missing and says what it is.
 
 1. **Cut into arenas / wells**: cuts the recording into one clip per arena and
    registers the trials in the ThermoKourt database. The bar shows the progress.
-2. **Then crop the full recording to the arenas**: afterwards the full video
+2. **Then crop the full recording to the arenas (saves disk space)**: afterwards the full video
    is replaced by a copy cropped to the arenas. This saves a lot of disk space.
    The cropped copy is checked frame by frame before the full video is deleted.
 3. **padding**: the margin kept around the arenas when cropping.
@@ -149,8 +154,8 @@ The saved circles also become the rig's layout for the next recording.
 2. **Refresh models**: fetches the newest model list from Aoraki.
 3. **Check model vs videos**: checks that the clips suit the model (colour,
    frame rate, size).
-4. **use anyway**: sends the clips even if that check failed. Only with Bart's
-   OK.
+4. **use anyway (Bart's OK)**: sends the clips even if that check failed.
+   Only with Bart's OK.
 5. **Rerun with this model**: analyses the recording again with the model
    chosen in 1. The earlier poses are kept in an archive folder; the scores are
    replaced.
@@ -180,7 +185,7 @@ GPU are used at once; the run is done when every tile is green.
 1. **Disk**: the USB disk to copy the results to. Choose *… a folder instead*
    to write to a folder.
 2. **Rescan**: looks again after you plugged a disk in.
-3. **blind export**: leaves out genotypes and vial codes, so whoever scores the
+3. **blind export (no genotypes / vials)**: leaves out genotypes and vial codes, so whoever scores the
    videos does not know the groups.
 4. **Clips**: which videos go along: none, the arena clips as recorded, clips
    with the tracked skeletons, with the scored events, or both.
@@ -337,10 +342,21 @@ image size, arenas and who labelled them.
    stops improving.
 4. **Start training**: sends the frames to Aoraki and starts training. You can
    close the wizard; it picks the run up again when reopened.
-5. **Make it the default model**: offered only when the new model is not worse
+5. **Steps**: Aoraki trains two models one after the other (*Centroid model*
+   finds the flies, *Instance model* places the points), then scores the new
+   and the current model. Green ✓ is done, orange ● is running.
+6. **Epoch bar**: epochs done for the model in training, and about how long
+   is left. Training stops 20 epochs after the best epoch, so the end moves
+   back each time the model gets better (never past *Epochs (at most)*). The
+   page checks Aoraki every minute.
+7. **Loss curves**: one per model. Blue is the training loss, orange the
+   validation loss, the dot the best epoch (the model that is kept). Both
+   should go down. If the blue line keeps falling while the orange one stays
+   flat, the model is learning the training frames by heart: label more frames.
+8. **Make it the default model**: offered only when the new model is not worse
    than the current one on any validation set and better on at least one. The
-   table shows both models' scores (mAP) per validation set.
-6. **Register without making it the default**: keeps the model in the list
+   table above shows both models' scores (mAP) per validation set.
+9. **Register without making it the default**: keeps the model in the list
    without using it for new recordings.
 
 ## Annotating Drosophila triads in SLEAP

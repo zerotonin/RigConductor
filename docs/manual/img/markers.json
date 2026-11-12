@@ -136,6 +136,9 @@
   "Compare with",
   "Epochs (at most)",
   "Start training",
+  "Steps",
+  "Epoch bar",
+  "Loss curves",
   "Make it the default model",
   "Register without making it the default"
  ],

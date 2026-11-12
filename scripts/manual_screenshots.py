@@ -52,6 +52,29 @@ BADGE_PX = 24
 SETTLE_S = 60  # longest wait for a background task (SLEAP inspect, summaries)
 EXAMPLE_GROUP = "G01"
 EXAMPLE_LABELLER = "JC"
+EXAMPLE_JOB = "1234567"
+
+
+def example_training() -> dict:
+    """A made-up run: centroid stopped early at epoch 33, instance model at epoch 18."""
+    import math
+
+    def curve(n: int, best: int, start: float) -> list[tuple]:
+        rows = [(0, None, start * 1.5, None)]
+        for e in range(1, n):
+            train = start * math.exp(-e / 6) + start * 0.01
+            val = start * (0.5 + 0.4 * math.exp(-e / 3) + 0.02 * abs(e - best) / best)
+            rows.append((e, train, val, 14.5 + (e % 3) * 0.3))
+        return rows
+
+    return {
+        "state": "RUNNING",
+        "trained": 1,
+        "curves": {"centroid": curve(33, 12, 3e-4), "centered_instance": curve(19, 30, 2e-3)},
+        "patience": {"centroid": 20, "centered_instance": 20},
+    }
+
+
 WINDOW_W, WINDOW_H = 1280, 820  # wide enough for the Analyse toolbar
 
 
@@ -575,7 +598,11 @@ def training_wizard(app, cfg, a, out, legend, secrets):
     shoot(app, wiz, "train_7_data", marks, out, legend, secrets)
 
     wiz.train_version = da.version.currentData() or 1
+    lw.TrainPage.resume = lambda self: None  # never poll a real run on Aoraki
     tr = show_page(app, wiz, lw.PAGE_TRAIN)
+    tr.start_btn.setEnabled(False)
+    tr.state.setText(f"job {EXAMPLE_JOB}: running")
+    tr.training.show_status(example_training(), tr.epochs.value())
     shoot(
         app,
         wiz,
@@ -585,6 +612,9 @@ def training_wizard(app, cfg, a, out, legend, secrets):
             ("Compare with", tr.compare),
             ("Epochs (at most)", tr.epochs),
             ("Start training", tr.start_btn),
+            ("Steps", tr.training.steps[0]),
+            ("Epoch bar", tr.training.bar),
+            ("Loss curves", tr.training.plots["centroid"]),
             ("Make it the default model", tr.promote_btn),
             ("Register without making it the default", tr.keep_btn),
         ],
@@ -615,11 +645,14 @@ def main(argv: list[str] | None = None) -> int:
     remote = cluster_user(cfg.cluster.ssh_host)
     if remote:
         secrets.append((remote, "user"))
-    legend: dict[str, list[str]] = {}
+    legend_file = out / "markers.json"  # shared with manual_sleap_screenshots.py
+    legend: dict[str, list[str]] = (
+        json.loads(legend_file.read_text(encoding="utf-8")) if legend_file.is_file() else {}
+    )
     main_wizard(app, cfg, a, out, legend, secrets)
     extra_windows(app, cfg, a, out, legend, secrets)
     training_wizard(app, cfg, a, out, legend, secrets)
-    (out / "markers.json").write_text(json.dumps(legend, indent=1), encoding="utf-8")
+    legend_file.write_text(json.dumps(legend, indent=1), encoding="utf-8")
     return 0
 
 
