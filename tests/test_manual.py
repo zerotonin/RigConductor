@@ -56,6 +56,9 @@ def wizards(tmp_path, monkeypatch):
     monkeypatch.setattr(store, "LABEL_SETS_DIR", str(tmp_path / "sets"))
     monkeypatch.setattr(sleapenv, "find", lambda run=None: None)
     monkeypatch.setattr(lw, "removable_disks", lambda: [])
+    lset = store.LabelSet.create("triad", ["thorax"])  # the Train page needs a set
+    (lset.path / "v1.pkg.slp").write_bytes(b"x")
+    lset.add_version({"frames": 3, "instances": 9, "recordings": {"r": 3}, "scales": {"450px": 3}})
     (tmp_path / "DATA").mkdir()
     cfg = ConductorConfig(
         data_root=tmp_path / "DATA",
