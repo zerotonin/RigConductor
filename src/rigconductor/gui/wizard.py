@@ -47,6 +47,7 @@ from rigconductor.export import Disk, removable_disks
 from rigconductor.gui import dialogs
 from rigconductor.gui.duration import DurationEdit, format_duration
 from rigconductor.gui.forms import make_form
+from rigconductor.gui.help_window import add_help_button
 from rigconductor.gui.preview import PreviewPanel
 from rigconductor.gui.progress import ProgressPanel, parse_progress
 from rigconductor.profiles import PROFILE_NAMES, make_profile
@@ -80,7 +81,6 @@ class Wizard(QWizard):
         self.setWindowTitle("Rig Conductor")
         self.setWizardStyle(QWizard.WizardStyle.ModernStyle)
         self.setOption(QWizard.WizardOption.NoBackButtonOnLastPage, True)
-        self.setOption(QWizard.WizardOption.HaveHelpButton, False)
         self.resize(1000, 760)
         self.session: ConductorSession | None = None
         self.worker: Worker | None = None
@@ -99,6 +99,7 @@ class Wizard(QWizard):
             self.pages[key] = cls(self)
             self.addPage(self.pages[key])
         self._add_update_buttons()
+        add_help_button(self)
 
     def open_training_wizard(self):
         from rigconductor.gui.labelling_wizard import LabellingWizard
@@ -116,6 +117,7 @@ class Wizard(QWizard):
         self.setOption(QWizard.WizardOption.HaveCustomButton3, True)
         self.setButtonLayout(
             [
+                QWizard.WizardButton.HelpButton,
                 QWizard.WizardButton.CustomButton1,
                 QWizard.WizardButton.CustomButton2,
                 QWizard.WizardButton.CustomButton3,

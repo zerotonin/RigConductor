@@ -59,11 +59,14 @@ from rigconductor.constants import (
     LABEL_THUMB_PX,
     TRAIN_EPOCHS,
     TRAIN_POLL_S,
+    TRAIN_TABLE_MAX_PX,
     WONG,
 )
 from rigconductor.export import removable_disks
 from rigconductor.gui import dialogs
+from rigconductor.gui.help_window import add_help_button
 from rigconductor.gui.progress import ProgressPanel, parse_progress
+from rigconductor.gui.train_progress import TrainingProgress
 from rigconductor.gui.wizard import Worker
 from rigconductor.labels import package as pkg_mod
 from rigconductor.labels import train as train_mod
@@ -151,6 +154,8 @@ def progress_to(emit):
 
 # ── start ─────────────────────────────────────────────────────────
 class StartPage(TaskPage):
+    manual_section = "Start"
+
     def __init__(self, wiz):
         super().__init__(wiz, "Training data", "Grow a label set, bring labels back, or train.")
         form = QFormLayout()
@@ -301,6 +306,8 @@ def _ask_text(parent, title, label, default=""):
 
 # ── recordings ────────────────────────────────────────────────────
 class RecordingsPage(TaskPage):
+    manual_section = "Pick new frames: Recordings"
+
     COLS = ["Use", "Validation only", "Recording", "Date", "Scale", "Arenas", "Poses", "In set"]
 
     def __init__(self, wiz):
@@ -385,6 +392,8 @@ class RecordingsPage(TaskPage):
 
 # ── frames ────────────────────────────────────────────────────────
 class FramesPage(TaskPage):
+    manual_section = "Pick new frames: Frames"
+
     def __init__(self, wiz):
         super().__init__(
             wiz,
@@ -488,6 +497,8 @@ class FramesPage(TaskPage):
 
 # ── package ───────────────────────────────────────────────────────
 class PackagePage(TaskPage):
+    manual_section = "Pick new frames: Where to label"
+
     def __init__(self, wiz):
         super().__init__(
             wiz,
@@ -662,6 +673,8 @@ def labelling_items(lset: LabelSet, extra_roots: list[Path] = ()) -> list[dict]:
 
 
 class ContinuePage(TaskPage):
+    manual_section = "Continue labelling"
+
     COLS = ["Name", "Kind", "Progress", "Labelled", "Predicted", "Not yet", "Where", "About"]
 
     def __init__(self, wiz):
@@ -934,6 +947,8 @@ class ContinuePage(TaskPage):
 
 # ── bring back ────────────────────────────────────────────────────
 class BackPage(TaskPage):
+    manual_section = "Bring labelled frames back"
+
     def __init__(self, wiz):
         super().__init__(
             wiz,
@@ -1142,6 +1157,8 @@ class ExampleDialog(QDialog):
 
 
 class DataPage(TaskPage):
+    manual_section = "Training data"
+
     COLS = [
         "Example",
         "Use as",
@@ -1329,6 +1346,8 @@ class DataPage(TaskPage):
 
 # ── train ─────────────────────────────────────────────────────────
 class TrainPage(TaskPage):
+    manual_section = "Train on Aoraki"
+
     def __init__(self, wiz):
         super().__init__(
             wiz,
@@ -1360,8 +1379,11 @@ class TrainPage(TaskPage):
         self.state = QLabel("")
         row.addWidget(self.state, 1)
         self.lay.addLayout(row)
+        self.training = TrainingProgress()
+        self.lay.addWidget(self.training)
         self.table = _table(["Validation set", "Frames", "New mAP", "Current mAP"])
-        self.lay.addWidget(self.table, 1)
+        self.table.setMaximumHeight(TRAIN_TABLE_MAX_PX)  # a few validation sets
+        self.lay.addWidget(self.table)
         prow = QHBoxLayout()
         self.promote_btn = QPushButton("Make it the default model")
         self.promote_btn.clicked.connect(lambda: self.register(True))
@@ -1412,6 +1434,7 @@ class TrainPage(TaskPage):
         for m in reversed(self.wiz.lset.data["models"]):
             if m.get("status") in ("submitted", "trained"):
                 self.plan = train_mod.TrainPlan.from_entry(m)
+                self.training.show_status({}, m.get("epochs", TRAIN_EPOCHS))
                 self.state.setText(f"run {self.plan.run}, job {self.plan.job_id}: checking…")
                 self.start_btn.setEnabled(False)
                 self.timer.start(TRAIN_POLL_S * 1000)
@@ -1449,6 +1472,7 @@ class TrainPage(TaskPage):
         def done(ok, _m):
             if ok:
                 self.plan = plan
+                self.training.show_status({}, epochs)
                 self.timer.start(TRAIN_POLL_S * 1000)
                 self.poll()
             else:
@@ -1471,8 +1495,8 @@ class TrainPage(TaskPage):
             if not ok:
                 return
             st = out["st"]
-            epoch = f", epoch {st['epoch']}" if st["epoch"] is not None else ""
-            self.state.setText(f"job {plan.job_id}: {st['state'] or 'queued'}{epoch}")
+            self.state.setText(f"job {plan.job_id}: {(st['state'] or 'queued').lower()}")
+            self.training.show_status(st)
             if st["failed"]:
                 self.timer.stop()
                 self.wiz.lset.update_model(plan.run, status="failed", error=st["failed"])
@@ -1585,6 +1609,7 @@ class LabellingWizard(QWizard):
             (PAGE_TRAIN, TrainPage),
         ):
             self.setPage(pid, cls(self))
+        add_help_button(self)
 
     def run_in_worker(self, fn, on_done, sink):
         if self.worker and self.worker.isRunning():

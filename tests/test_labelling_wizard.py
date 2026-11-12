@@ -314,3 +314,15 @@ def test_copy_package_to_a_stick_and_replace_only_after_a_warning(wiz, monkeypat
 
     pkg_mod.delete_package(lset, "p1")  # finds the recorded copy on the stick too
     assert not local.exists() and not target.exists()
+
+
+def test_train_page_keeps_its_local_bar_next_to_the_training_progress(wiz):
+    from rigconductor.gui import labelling_wizard as lw
+    from rigconductor.gui.progress import ProgressPanel
+    from rigconductor.gui.train_progress import TrainingProgress
+
+    tr = wiz.page(lw.PAGE_TRAIN)
+    assert isinstance(tr.progress, ProgressPanel) and isinstance(tr.training, TrainingProgress)
+    tr.add_line("@progress label 0.5 splitting")  # the split step's bar still works
+    tr.training.show_status({"trained": 0, "curves": {}}, 10)
+    assert tr.training.bar.format() == "Centroid model: epoch 0 of 10"

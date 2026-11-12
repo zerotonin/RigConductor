@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **Training progress as a picture** (Train on Aoraki): steps centroid model →
+  instance model → scoring, an epoch bar that ends where early stopping will end
+  the run (best epoch + patience) with the time left, and the training and
+  validation loss curves per epoch (from sleap-nn's `training_log.csv`, log
+  scale, best epoch marked). The page polls Aoraki every 60 s (was 120 s).
+- **Help button and F1** in both wizards: the user manual opens in its own window
+  at the section about the current page, with contents and search (same design
+  as DrosoDB). `tests/test_manual.py` fails when a page has no section or a
+  button, checkbox or group box is not named in the manual.
 - Manual chapter **Annotating Drosophila triads in SLEAP**: the 13 points, correcting
   the model's guesses, the female's hidden head points, the frame rules and the
   SLEAP keys, with pictures of SLEAP 1.6 itself

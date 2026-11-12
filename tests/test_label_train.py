@@ -42,6 +42,63 @@ def test_parse_status():
     assert train.parse_status("STATE=TIMEOUT")["failed"] == "TIMEOUT"
 
 
+def test_parse_status_reads_loss_curves_and_patience():
+    text = "\n".join(
+        [
+            "STATE=RUNNING",
+            "TRAINED=1",
+            "CURVE=centroid",
+            "0,,0.0003,",
+            "1,0.0005,0.0002,14.9",
+            "2,0.0001,0.00025,14.1",
+            "PATIENCE=20",
+            "CURVE_END",
+            "CURVE=centered_instance",
+            "PATIENCE=",
+            "CURVE_END",
+            "Epoch 7/200",
+        ]
+    )
+    st = train.parse_status(text)
+    assert st["trained"] == 1 and st["patience"] == {"centroid": 20}
+    assert st["curves"]["centroid"] == [
+        (0, None, 0.0003, None),
+        (1, 0.0005, 0.0002, 14.9),
+        (2, 0.0001, 0.00025, 14.1),
+    ]
+    assert "centered_instance" not in st["curves"] and st["epoch"] == 7
+    assert st["tail"] == ["Epoch 7/200"]
+
+
+def test_awk_programs_pick_columns_and_patience_by_name(tmp_path):
+    import shutil
+    import subprocess
+
+    import pytest
+
+    if shutil.which("awk") is None:
+        pytest.skip("needs awk")
+    csv = tmp_path / "training_log.csv"
+    csv.write_text(
+        "epoch,train/loss,val/loss,learning_rate,train/time\n0,,0.3,,\n1,0.5,0.2,1e-4,14.9\n",
+        encoding="utf-8",
+    )
+    out = subprocess.run(
+        ["awk", "-F,", train.CURVE_AWK, str(csv)], capture_output=True, text=True, check=True
+    ).stdout
+    assert out.split() == ["0,,0.3,", "1,0.5,0.2,14.9"]
+    cfg = tmp_path / "training_config.yaml"
+    cfg.write_text(
+        "trainer_config:\n  lr_scheduler:\n    patience: 5\n"
+        "  early_stopping:\n    min_delta: 1.0e-08\n    patience: 20\n",
+        encoding="utf-8",
+    )
+    out = subprocess.run(
+        ["awk", train.PATIENCE_AWK, str(cfg)], capture_output=True, text=True, check=True
+    ).stdout
+    assert out.strip() == "20"
+
+
 def test_promotion_rule():
     rows = [
         {"model": "new", "set": "500px", "mAP": 0.8, "frames": 50},

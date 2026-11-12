@@ -37,6 +37,19 @@ TRAIN_SCRIPTS = (  # thermokourt repo → $PROJ/scripts
 )
 EPOCH_RE = re.compile(r"Epoch (\d+)")
 METRIC = "mAP"
+HEADS = ("centroid", "centered_instance")  # trained one after the other
+# training_log.csv → "epoch,train loss,val loss,seconds" (column names differ by version)
+CURVE_AWK = (
+    "NR==1{for(i=1;i<=NF;i++){"
+    'if($i=="epoch")e=i;'
+    'if($i=="train/loss"||$i=="train_loss")t=i;'
+    'if($i=="val/loss"||$i=="val_loss")v=i;'
+    'if($i=="train/time")s=i'
+    "};next}"
+    '{print $e","(t?$t:"")","(v?$v:"")","(s?$s:"")}'
+)
+# the early-stopping patience (the scheduler has a "patience" too, earlier in the file)
+PATIENCE_AWK = "/early_stopping:/{f=1} f&&/patience:/{print $2; exit}"
 
 
 @dataclass
@@ -206,19 +219,72 @@ def status_command(proj: str, plan: TrainPlan) -> str:
     q = shlex.quote
     models = f"{proj}/models/{plan.run}"
     log = f"{proj}/logs/sleap-nn-train_{plan.job_id}.log"
+    curves = "".join(
+        f"echo CURVE={head}; awk -F, {q(CURVE_AWK)} {q(f'{models}.{head}/training_log.csv')}"
+        f" 2>/dev/null; echo PATIENCE=$(awk {q(PATIENCE_AWK)} "
+        f"{q(f'{models}.{head}/training_config.yaml')} 2>/dev/null); "
+        "echo CURVE_END; "
+        for head in HEADS
+    )
     return (
         f"echo STATE=$(sacct -j {q(plan.job_id)} -n -X -o State 2>/dev/null | head -n1 | xargs); "
         f"test -f {q(models + '.done')} && echo DONE; "
         f"test -f {q(models + '.failed')} && echo FAILED=$(cat {q(models + '.failed')}); "
-        f"tail -c 4000 {q(log)} 2>/dev/null | tr '\\r' '\\n' | tail -n 20"
+        f"echo TRAINED=$(grep -c ' trained in ' {q(log)} 2>/dev/null); "
+        + curves
+        + f"tail -c 4000 {q(log)} 2>/dev/null | tr '\\r' '\\n' | tail -n 20"
     )
 
 
+def _num(text: str) -> float | None:
+    try:
+        return float(text)
+    except ValueError:
+        return None
+
+
+def _curve_row(line: str) -> tuple | None:
+    """``epoch,train,val,seconds`` → (epoch, train, val, seconds); missing values None."""
+    parts = (line.split(",") + ["", "", "", ""])[:4]
+    epoch = _num(parts[0])
+    if epoch is None:
+        return None
+    return (int(epoch), *(_num(x) for x in parts[1:]))
+
+
 def parse_status(text: str) -> dict:
-    """State, done/failed flags, last epoch seen and a log tail."""
-    st = {"state": "", "done": False, "failed": "", "epoch": None, "tail": []}
+    """State, done/failed flags, loss curves per head, last epoch seen and a log tail.
+
+    ``curves`` maps a head to rows (epoch, train loss, val loss, seconds);
+    ``patience`` a head to its early-stopping patience (epochs without a better
+    validation loss); ``trained`` is how many heads have finished training.
+    """
+    st = {
+        "state": "",
+        "done": False,
+        "failed": "",
+        "epoch": None,
+        "trained": 0,
+        "curves": {},
+        "patience": {},
+        "tail": [],
+    }
+    head = None
     for line in text.splitlines():
-        if line.startswith("STATE="):
+        if head is not None:
+            if line == "CURVE_END":
+                head = None
+            elif line.startswith("PATIENCE="):
+                n = _num(line[len("PATIENCE=") :].strip())
+                if n is not None:
+                    st["patience"][head] = int(n)
+            elif (row := _curve_row(line)) is not None:
+                st["curves"].setdefault(head, []).append(row)
+        elif line.startswith("CURVE="):
+            head = line[len("CURVE=") :].strip()
+        elif line.startswith("TRAINED="):
+            st["trained"] = int(_num(line[len("TRAINED=") :].strip() or "0") or 0)
+        elif line.startswith("STATE="):
             st["state"] = line[len("STATE=") :].strip()
         elif line == "DONE":
             st["done"] = True
