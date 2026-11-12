@@ -10,3 +10,6 @@ htmlcov/
 # machine-local
 rig.yaml
 local_paths.json
+
+# docs site build
+docs/_build/

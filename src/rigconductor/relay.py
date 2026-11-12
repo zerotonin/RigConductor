@@ -7,7 +7,7 @@
 # ╚══════════════════════════════════════════════════════════════════╝
 """Offline hand-over: a rig without network packs a session, a *relay* (any
 Conductor install that can reach the cluster) runs the cluster stages, and the
-results travel back on the same USB stick.
+results travel back on the same USB stick::
 
     rig    : pack_job(session, dest)            → <session>.job.zip
     relay  : import_job(cfg, zip) → session ; run upload → fetch

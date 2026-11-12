@@ -1,0 +1,40 @@
+cff-version: 1.2.0
+title: "Rig Conductor: from Motif recording to analysed results on a USB disk"
+message: "If you use this software, please cite it as below."
+type: software
+version: "0.1.0"
+license: MIT
+repository-code: "https://github.com/zerotonin/RigConductor"
+url: "https://zerotonin.github.io/RigConductor/"
+keywords:
+  - Drosophila
+  - aggression
+  - animal-behaviour
+  - pose-estimation
+  - SLEAP
+  - loopbio Motif
+  - laboratory-automation
+  - SLURM
+  - Python
+authors:
+  - given-names: "Bart R.H."
+    family-names: Geurten
+    email: bart.geurten@otago.ac.nz
+    orcid: "https://orcid.org/0000-0002-1816-3241"
+    affiliation: "Department of Zoology, University of Otago, Dunedin, New Zealand"
+abstract: >-
+  Rig Conductor is one wizard from "press record" to results on a USB disk
+  for a loopbio Motif rig. It records through the Motif REST API, cuts the
+  video into one clip per arena, tracks the animals with SLEAP on an HPC
+  cluster (SLURM), scores the behaviour and exports the results. A second
+  wizard grows a versioned set of hand-labelled frames, trains new pose
+  models on the cluster and promotes a model only when it is not worse on
+  any validation recording and better on at least one.
+references:
+  - type: software
+    title: "ThermoKourt"
+    url: "https://github.com/zerotonin/thermokourt"
+    authors:
+      - given-names: "Bart R.H."
+        family-names: Geurten
+        orcid: "https://orcid.org/0000-0002-1816-3241"

@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **Documentation site** (Sphinx + Furo + MyST, like DigiMuh): the user manual,
+  the changelog and the API reference, built and published to GitHub Pages by
+  `.github/workflows/docs.yml`; `release.yml` tests, builds and publishes a GitHub
+  release for every `v*.*.*` tag. `CITATION.cff` added; README badges.
+- Manual: new first chapter **Before you start: Motif and the camera** (open Motif,
+  Recording Control → Connect, check the live image) with pictures of Motif.
+- Tests: every test gets a dummy `MOTIF_API_KEY` (CI has no rig), and an exception
+  inside a Qt callback now fails the test (Python 3.11+ aborted the whole run);
+  the Help test gets a label set.
 - **Training progress as a picture** (Train on Aoraki): steps centroid model →
   instance model → scoring, an epoch bar that ends where early stopping will end
   the run (best epoch + patience) with the time left, and the training and

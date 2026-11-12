@@ -1,5 +1,17 @@
 # rigconductor
 
+[![Tests](https://github.com/zerotonin/RigConductor/actions/workflows/tests.yml/badge.svg)](https://github.com/zerotonin/RigConductor/actions/workflows/tests.yml)
+[![Lint](https://github.com/zerotonin/RigConductor/actions/workflows/lint.yml/badge.svg)](https://github.com/zerotonin/RigConductor/actions/workflows/lint.yml)
+[![Docs](https://github.com/zerotonin/RigConductor/actions/workflows/docs.yml/badge.svg)](https://zerotonin.github.io/RigConductor/)
+[![Release](https://github.com/zerotonin/RigConductor/actions/workflows/release.yml/badge.svg)](https://github.com/zerotonin/RigConductor/releases)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![GUI: PyQt6](https://img.shields.io/badge/GUI-PyQt6-41CD52.svg)](https://www.riverbankcomputing.com/software/pyqt/)
+[![Pose: SLEAP 1.6](https://img.shields.io/badge/pose-SLEAP%201.6-0072B2.svg)](https://sleap.ai/)
+[![Uses ThermoKourt](https://img.shields.io/badge/uses-ThermoKourt-009E73.svg)](https://github.com/zerotonin/thermokourt)
+[![Manual](https://img.shields.io/badge/manual-user%20guide-E69F00.svg)](https://zerotonin.github.io/RigConductor/manual/user_manual.html)
+
 One wizard from "press record" to "results on the USB disk", for a loopbio Motif
 rig. Two organism profiles:
 

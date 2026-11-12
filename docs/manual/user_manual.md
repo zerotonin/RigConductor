@@ -11,6 +11,37 @@ where to click; the list under each picture says what each number does.
 Example content (vials, a run on Aoraki, picked frames) was filled in for the
 pictures.
 
+## Before you start: Motif and the camera
+
+Rig Conductor records through **Motif**, the loopbio recording software. Motif
+runs in the background from the moment the PC starts, but the camera must be
+**connected in Motif before you open Rig Conductor**. Do this first, every
+recording day.
+
+**Open Motif:** press the **Super** key (or *Show Applications*, bottom left),
+type **Motif** and click the **Motif** icon (the loopbio logo). Motif opens in
+the web browser. (*Motif (admin interface)* is for repairs only.)
+
+![Motif start page](img/motif_1_start.png)
+
+1. **Recording Control**: the cameras and whether they are connected.
+2. **Camera 40366151**: the live image of the camera.
+
+Click **Recording Control**:
+
+![Motif Recording Control](img/motif_2_control.png)
+
+1. **The camera** (its serial number): click it to see the live image.
+2. **State** of the camera, for example *Recording finished* or *Idle*.
+3. **Connect**: press it when the camera is not connected. When it is
+   connected, *Connect* is grey and *Disconnect* is blue, as in the picture.
+   Do not press *Disconnect*.
+
+Then open the live image (**Camera 40366151** on the start page) and check
+that all arenas are in view and lit. Now start Rig Conductor. On its first
+page, **Check rig readiness** must show the camera line as *OK*; if it does
+not, go back to Motif and connect the camera.
+
 ## Starting the programs
 
 | What | Desktop icon | Command |
