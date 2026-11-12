@@ -1,8 +1,8 @@
 # Labelling rules: Drosophila triads
 
 Open the package with `label.sh` (or the "SLEAP labelling" icon, then
-File → Open → `labels.pkg.slp`). Work through **Labels → Suggestions**; every
-suggested frame is one to label. Save often with **Ctrl+S**.
+File → Open → `labels.pkg.slp`). Every row of the **Labeling Suggestions** tab is
+one frame to label; **Space** goes to the next one. Save often with **Ctrl+S**.
 
 ## Per frame
 
@@ -10,8 +10,9 @@ suggested frame is one to label. Save often with **Ctrl+S**.
 - The **female** gets head, eyeL and eyeR placed where the head would be, and those
   three points marked **not visible** (right-click the point → toggle visibility).
   Do not delete them.
-- Where a frame was pre-filled by the model, **check every point** and correct it.
-  A corrected fly turns into a labelled fly; delete predicted flies that are wrong.
+- Where a frame was pre-filled by the model, **double-click** each guessed fly to
+  turn it into a labelled fly, then **check every point** and correct it. Delete
+  guesses that are not a fly (select, **Ctrl+Backspace**).
 - **Finish a frame completely or skip it.** A frame with some flies corrected and
   some still predicted is rejected when it comes back.
 - If a fly is not in the image or you cannot tell the flies apart, skip the frame.

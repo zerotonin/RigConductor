@@ -359,6 +359,16 @@ def task_check(a: dict) -> dict:
     return _judge(_returned_frames(labels, a["package_frames"]), nodes, a)
 
 
+def _live_instances(lf) -> list:
+    """Instances on a frame, minus predictions a labeller already corrected.
+
+    Double-clicking a prediction in SLEAP makes a labelled copy and keeps the
+    prediction hidden underneath; that hidden one is not a half-corrected fly.
+    """
+    replaced = {id(i.from_predicted) for i in lf.user_instances if i.from_predicted is not None}
+    return [i for i in lf.instances if id(i) not in replaced]
+
+
 def _judge(items: list, nodes: list[str], a: dict) -> dict:
     """Rule check of (frame, hash, info) items; the report the Back page shows."""
     rows = []
@@ -368,7 +378,8 @@ def _judge(items: list, nodes: list[str], a: dict) -> dict:
         else:
             img = lf.video[lf.frame_idx]
             insts = [
-                rules.Inst(i.numpy(), user=type(i).__name__ == "Instance") for i in lf.instances
+                rules.Inst(i.numpy(), user=type(i).__name__ == "Instance")
+                for i in _live_instances(lf)
             ]
             v = rules.check_frame(
                 insts,

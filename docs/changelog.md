@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- Manual chapter **Annotating Drosophila triads in SLEAP**: the 13 points, correcting
+  the model's guesses, the female's hidden head points, the frame rules and the
+  SLEAP keys, with pictures of SLEAP 1.6 itself
+  (`scripts/manual_sleap_screenshots.py`, run with SLEAP's python).
+- Fix: a fly corrected by double-clicking the model's guess made the frame
+  "half-corrected" on return, because SLEAP keeps the guess hidden under the
+  labelled copy. Replaced guesses are now ignored by the check.
+- `RULES.md` in packages: names the *Labeling Suggestions* tab (there is no
+  Labels → Suggestions menu) and says to double-click a guess first.
+- **User manual** (`docs/manual/user_manual.md`): every page of the main wizard,
+  the arena editor, Rig Relay and the training-data wizard, each with a
+  screenshot whose click-points are numbered and explained, plus the command
+  line. `scripts/manual_screenshots.py` makes the screenshots offscreen from the
+  real windows (example content, home folders and user names blanked);
+  `scripts/build_manual_pdf.py` prints the manual to one A4 PDF with Qt (no
+  pandoc or LaTeX needed).
 - **Training-data wizard** (`rigconductor label`, "Training data…" button, desktop
   icon *Rig Conductor — training data*): label sets with versions
   (`~/data/sleap_labels/sets/<set>/`), frame choice from analysed recordings

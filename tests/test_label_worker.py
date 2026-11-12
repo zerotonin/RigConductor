@@ -48,6 +48,10 @@ for i, s in enumerate(L.suggestions[:n]):
         insts.append(sio.Instance.from_numpy(xy, skeleton=sk))
     if i == 0:
         insts = insts[:2]  # wrong count -> rejected
+    if i == 1:  # fly corrected by double-click: SLEAP keeps the prediction underneath
+        pred = sio.PredictedInstance.from_numpy(insts[0].numpy() + 1, skeleton=sk, score=0.9)
+        insts[0].from_predicted = pred
+        insts.append(pred)
     L.append(sio.LabeledFrame(video=s.video, frame_idx=s.frame_idx, instances=insts))
 L.save(src)
 """
